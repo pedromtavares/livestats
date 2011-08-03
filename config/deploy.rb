@@ -7,6 +7,7 @@ set :deploy_to,           "/home/deployer/livestats"
 set :runner,              "deployer"
 set :repository,          "git@github.com:pedromtavares/livestats.git"
 set :scm,                 :git
+set :node_file, "server.js"
 ssh_options[:paranoid]    = false
 default_run_options[:pty] = true
 
@@ -43,7 +44,7 @@ namespace :deploy do
 
   task :create_deploy_to_with_sudo, :roles => :app do
     run "sudo mkdir -p #{deploy_to}"
-    run "sudo chown #{admin_runner}:#{admin_runner} #{deploy_to}"
+    run "sudo chown #{runner} #{deploy_to}"
   end
 
   task :write_upstart_script, :roles => :app do
@@ -55,11 +56,11 @@ namespace :deploy do
 
   script
       # We found $HOME is needed. Without it, we ran into problems
-      export HOME="/home/#{admin_runner}"
+      export HOME="/home/#{runner}"
       export NODE_ENV="#{node_env}"
 
       cd #{current_path}
-      exec sudo -u #{admin_runner} sh -c "NODE_ENV=#{node_env} /usr/local/bin/node #{current_path}/#{node_file} #{application_port} >> #{shared_path}/log/#{node_env}.log 2>&1"
+      exec sudo -u #{runner} sh -c "NODE_ENV=#{node_env} /usr/local/bin/node #{current_path}/#{node_file} #{application_port} >> #{shared_path}/log/#{node_env}.log 2>&1"
   end script
   respawn
 UPSTART
